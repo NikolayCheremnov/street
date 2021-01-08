@@ -14,7 +14,7 @@ function loadObj(mtlURL, objURL, setPosition) {
 
 function main() {
     // main color
-    var main_color = 0xFFFFFF
+    var main_color = 0xFFFFFF;
 
 	// Create scene, camera and render
 	var scene = new THREE.Scene();
@@ -91,6 +91,21 @@ function main() {
     const ambient_light = new THREE.AmbientLight(main_color, 1)
     scene.add(ambient_light)
 
+    // curb drawing
+    function drawCurb(x=0, y=0, z=0, width=10, height=10, depth=10) {
+        var geometry = new THREE.BoxGeometry(width, height, depth);
+        var material = new THREE.MeshBasicMaterial({
+            map: textureLoader.load('../textures/curb.jpg'),
+        });
+        var curb = new THREE.Mesh(geometry, material);
+        curb.position.x = x;
+        curb.position.y = y;
+        curb.position.z = z;
+        scene.add(curb);
+    }
+    for (var i = -30; i < 31; i += 3)
+        drawCurb(i, 0, -5, 2.9, 2, 0.5);
+
     // draw flashkights
     function drawLamp(x=0, y=0, z=0, steelColor=0x574C4C, lampColor=0xffff00) {
         // stick
@@ -157,6 +172,19 @@ function main() {
     for (var i = -30; i < 31; i += 15)
         drawLamp(i, 0, 9)
 
+
+    // shop 1
+    loadObj(URL + "models/shop_1.mtl", URL + "models/shop_1.obj",
+    (shop) => {
+        //
+        shop.traverse(function(child) {
+            child.castShadow = true;
+            child.receiveShadow = true;
+        });
+        shop.position.set(0, 3, -11);
+        shop.rotation.y = Math.PI;
+        scene.add(shop);
+    });
     // animate
 	var animate = function() {
 		requestAnimationFrame(animate);
