@@ -1,5 +1,19 @@
 const URL = "./"
 
+// gui helper
+class ColorGUIHelper {
+    constructor(object, prop) {
+      this.object = object;
+      this.prop = prop;
+    }
+    get value() {
+      return `#${this.object[this.prop].getHexString()}`;
+    }
+    set value(hexString) {
+      this.object[this.prop].set(hexString);
+    }
+}
+
 // Load .obj model with .mtl
 function loadObj(mtlURL, objURL, setPosition) {
 	const objLoader = new THREE.OBJLoader();
@@ -14,7 +28,7 @@ function loadObj(mtlURL, objURL, setPosition) {
 
 function main() {
     // main color
-    var main_color = 0xFFFFFF;
+    var main_color = 0xB1E1FF;
 
 	// Create scene, camera and render
 	var scene = new THREE.Scene();
@@ -26,9 +40,9 @@ function main() {
 	const FAR = 100;
 	
     var camera = new THREE.PerspectiveCamera(FOV, ASPECT, NEAR, FAR);
-    camera.position.x = 5;
-    camera.position.z = -5;
-    camera.position.y = 5;
+    camera.position.x = 0;
+    camera.position.z = 0;
+    camera.position.y = 10;
 
 	var renderer = new THREE.WebGLRenderer();
 	renderer.setSize(window.innerWidth, window.innerHeight);
@@ -62,34 +76,36 @@ function main() {
         scene.add(sphere);
     }
 
-	// Floor
-	const planeSize = 20;
-	const textureLoader = new THREE.TextureLoader();
-	
-	const floorTexture = textureLoader.load(URL + "/textures/asphalt.jpg");
-	floorTexture.wrapS = THREE.RepeatWrapping;
-	floorTexture.wrapT = THREE.RepeatWrapping;
-	floorTexture.magFilter = THREE.NearestFilter;
-	
-	const repeats = 3;
-	floorTexture.repeat.set(repeats, repeats);
+    // constants
+    const textureLoader = new THREE.TextureLoader();
+    // plane drawing
+    function drawPlane(x=0, y=0, z=0, xAngle=0, yAngle=0, zAngle=0, planeSize=20, texturePath="", repeats=1, wMul=1, hMul=1) {
+        var planeTexture = textureLoader.load(texturePath);
+        planeTexture.wrapS = THREE.RepeatWrapping;
+        planeTexture.wrapT = THREE.RepeatWrapping;
+        planeTexture.magFilter = THREE.NearestFilter;
+        planeTexture.repeat.set(repeats, repeats);
 
-	const planeGeo = new THREE.PlaneBufferGeometry(planeSize*3, planeSize);
-	const planeMat = new THREE.MeshPhongMaterial({
-		map: floorTexture,
-		side: THREE.DoubleSide,
-	});
-	
-	const floor = new THREE.Mesh(planeGeo, planeMat);
-	floor.rotation.x = Math.PI * -0.5;
-	floor.position.set(0, 0, 0);
-	floor.receiveShadow = true;
-	
-	scene.add(floor);
+        var geometry = new THREE.PlaneBufferGeometry(planeSize*wMul, planeSize*hMul);
+        var material = new THREE.MeshPhongMaterial({
+            map: planeTexture,
+            side: THREE.DoubleSide,
+        });
+        var plane = new THREE.Mesh(geometry, material);
 
-    // adding ambient light
-    const ambient_light = new THREE.AmbientLight(main_color, 1)
-    scene.add(ambient_light)
+        // position
+        plane.position.set(x, y, z);
+        plane.rotation.x = xAngle;
+        plane.rotation.y = yAngle;
+        plane.rotation.z = zAngle;
+        plane.receiveShadow = true;
+        
+        scene.add(plane);
+    }
+    // asphalt
+    drawPlane(0, 0, 0, Math.PI * -0.5, 0, 0, 20, URL + "/textures/asphalt.jpg", 3, 3, 1);
+    // sidewalk
+    drawPlane(0, 0.89, -10, Math.PI * -0.5, 0, 0, 20, URL + "/textures/sidewalk.jpg", 6, 3, 0.5);
 
     // curb drawing
     function drawCurb(x=0, y=0, z=0, width=10, height=10, depth=10) {
@@ -106,9 +122,9 @@ function main() {
     for (var i = -30; i < 31; i += 3)
         drawCurb(i, 0, -5, 2.9, 2, 0.5);
 
-    // draw flashkights
+    // draw flashlights
     function drawLamp(x=0, y=0, z=0, steelColor=0x574C4C, lampColor=0xffff00) {
-        // stick
+        // stick 
         var radius = 0.1;
         var stickHeight = 8;
         
@@ -162,7 +178,7 @@ function main() {
 
         // light adding
         var lampLightIntensity = 2;
-        var lampLightDistance = 15;
+        var lampLightDistance = 20;
         const lampLight = new THREE.PointLight( 0xffffff, lampLightIntensity, lampLightDistance);
         lampLight.position.set(x, y+stickHeight, z-6);
         lampLight.castShadow = true;
@@ -170,7 +186,7 @@ function main() {
     }
     //drawLamp(0, 0, 0)
     for (var i = -30; i < 31; i += 15)
-        drawLamp(i, 0, 9)
+        drawLamp(i, 0, 9);
 
 
     // shop 1
@@ -181,10 +197,101 @@ function main() {
             child.castShadow = true;
             child.receiveShadow = true;
         });
-        shop.position.set(0, 3, -11);
+        shop.position.set(-22, 3.5, -9.5);
         shop.rotation.y = Math.PI;
         scene.add(shop);
+       
+
     });
+
+    // shop 2
+    loadObj(URL + "models/shop_2.mtl", URL + "models/shop_2.obj",
+    (shop) => {
+        //
+        shop.traverse(function(child) {
+            child.castShadow = true;
+            child.receiveShadow = true;
+        });
+        shop.position.set(-14.8, 4.5, -9.5);
+        shop.scale.set(15, 20, 15);
+        scene.add(shop);
+       
+
+    });
+
+    // shop 3
+    loadObj(URL + "models/shop_3.mtl", URL + "models/shop_3.obj",
+    (shop) => {
+        //
+        shop.traverse(function(child) {
+            child.castShadow = true;
+            child.receiveShadow = true;
+        });
+        shop.position.set(14, 5.5, -9.5);
+        shop.rotation.y = -Math.PI/4*3-Math.PI/8;
+        shop.scale.set(70, 70, 70);
+        scene.add(shop);
+       
+
+    });
+
+    // garden
+    loadObj(URL + "models/Garden.mtl", URL + "models/Garden.obj",
+    (garden) => {
+        //
+        garden.traverse(function(child) {
+            child.castShadow = true;
+            child.receiveShadow = true;
+        });
+        garden.position.set(24, 1, -10);
+        garden.scale.set(0.4, 0.4, 0.4);
+        scene.add(garden);
+       
+
+    });
+
+    // car
+    loadObj(URL + "models/1385 Jeep.mtl", URL + "models/1385 Jeep.obj",
+    (car) => {
+        //
+        car.traverse(function(child) {
+            child.castShadow = true;
+            child.receiveShadow = true;
+        });
+        car.position.set(10, -0.1, -2.2);
+        car.rotation.y = Math.PI/2;
+        car.scale.set(0.08, 0.08, 0.08);
+        scene.add(car);
+       
+
+    });
+
+    // benches addition
+    function AddBench(x=0, y=0, z=0, yAngle=0) {
+        loadObj(URL + "models/bench.mtl", URL + "models/bench.obj",
+        (bench) => {
+            //
+            bench.traverse(function(child) {
+                child.castShadow = true;
+                child.receiveShadow = true;
+            });
+            bench.position.set(x, y, z);
+            bench.rotation.y = yAngle;
+            bench.scale.set(0.015, 0.015, 0.015);
+            scene.add(bench);
+            
+
+        });
+    }
+    AddBench(5, 1.5, -9.5);
+    AddBench(-5, 1.5, -9.5);
+
+
+    
+    // adding ambient light
+    const h_light = new THREE.HemisphereLight(main_color, 0xB97A20, 0.5);
+    scene.add(h_light);
+
     // animate
 	var animate = function() {
 		requestAnimationFrame(animate);
@@ -192,9 +299,14 @@ function main() {
 		controls.update();
 
 		renderer.render(scene, camera);
-	}
-
-	animate();
+    }
+    
+    // gui
+    const gui = new dat.GUI();
+    // ambient controls
+    gui.addColor(new ColorGUIHelper(h_light, 'color'), 'value').name('color');
+    gui.add(h_light, 'intensity', 0, 2, 0.01);
+    animate();
 }
 
 main();
